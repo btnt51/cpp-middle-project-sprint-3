@@ -14,6 +14,17 @@
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "GCC: Build Debug app",
             "initCommands": ["settings set target.disable-aslr false"]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch BookDB tests",
+            "program": "${workspaceFolder}/build/BookDB_tests",
+            "args": [
+            ],
+            "cwd": "${workspaceFolder}/build",
+            "preLaunchTask": "GCC: Build Debug app",
+            "initCommands": ["settings set target.disable-aslr false"]
         }
     ]
 }
