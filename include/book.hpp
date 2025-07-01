@@ -1,7 +1,8 @@
 #pragma once
 
 #include <format>
-#include <stdexcept>
+#include <map>
+#include <string>
 #include <string_view>
 
 namespace bookdb {
@@ -10,13 +11,29 @@ enum class Genre { Fiction, NonFiction, SciFi, Biography, Mystery, Unknown };
 
 // Ваш код для constexpr преобразования строк в enum::Genre и наоборот здесь
 
+constexpr auto genre_names = std::array<std::string_view, static_cast<size_t>(Genre::Unknown) + 1>{
+    "Fiction", "NonFiction", "SciFi", "Biography", "Mystery", "Unknown"};
+
+static_assert(genre_names.size() == static_cast<size_t>(Genre::Unknown) + 1, "Неверный размер массива genre_names");
+
 constexpr Genre GenreFromString(std::string_view s) {
-    // Ваш код здесь
+    for (size_t i = 0; i < genre_names.size(); ++i) {
+        if (genre_names[i] == s) {
+            return static_cast<Genre>(i);
+        }
+    }
     return Genre::Unknown;
 }
 
+constexpr std::string_view StringFromGenre(Genre genre) {
+    auto idx = static_cast<size_t>(genre);
+    if (idx < genre_names.size()) {
+        return genre_names[idx];
+    }
+    return "Unknown";
+}
+
 struct Book {
-    // string_view для экономии памяти, чтобы ссылаться на оригинальную строку, хранящуюся в другом контейнере
     std::string_view author;
     std::string title;
 
@@ -24,8 +41,14 @@ struct Book {
     Genre genre;
     double rating;
     int read_count;
+    constexpr Book(std::string_view title, std::string_view author, int year, Genre genre, double rating,
+                   int read_count)
+        : author{author}, title{title}, year{year}, genre(genre), rating{rating}, read_count{read_count} {}
 
-    // Ваш код для конструкторов здесь
+    constexpr Book(std::string_view title, std::string_view author, int year, std::string_view genre, double rating,
+                   int read_count)
+        : author{author}, title{title}, year{year}, genre{GenreFromString(genre)}, rating{rating},
+          read_count{read_count} {}
 };
 }  // namespace bookdb
 
@@ -34,29 +57,20 @@ template <>
 struct formatter<bookdb::Genre, char> {
     template <typename FormatContext>
     auto format(const bookdb::Genre g, FormatContext &fc) const {
-        std::string genre_str;
-
-        // clang-format off
-        using bookdb::Genre;
-        switch (g) {
-            case Genre::Fiction:    genre_str = "Fiction"; break;
-            case Genre::Mystery:    genre_str = "Mystery"; break;
-            case Genre::NonFiction: genre_str = "NonFiction"; break;
-            case Genre::SciFi:      genre_str = "SciFi"; break;
-            case Genre::Biography:  genre_str = "Biography"; break;
-            case Genre::Unknown:    genre_str = "Unknown"; break;
-            default:
-                throw logic_error{"Unsupported bookdb::Genre"};
-            }
-        // clang-format on
-        return format_to(fc.out(), "{}", genre_str);
+        return format_to(fc.out(), "{}", StringFromGenre(g));
     }
 
-    constexpr auto parse(format_parse_context &ctx) {
-        return ctx.begin();  // Просто игнорируем пользовательский формат
-    }
+    constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
 };
 
-// Ваш код для std::formatter<Book> здесь
+template <>
+struct formatter<bookdb::Book, char> {
+    template <typename FormatContext>
+    auto format(const bookdb::Book b, FormatContext &fc) const {
+        return format_to(fc.out(), "Author: {} / Title: {} / Year: {} / Genre: {} / Rating: {} / Read count: {}",
+                         b.author, b.title, b.year, bookdb::StringFromGenre(b.genre), b.rating, b.read_count);
+    }
 
+    constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+};
 }  // namespace std
