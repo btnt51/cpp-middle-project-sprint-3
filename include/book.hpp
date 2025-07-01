@@ -11,18 +11,26 @@ enum class Genre { Fiction, NonFiction, SciFi, Biography, Mystery, Unknown };
 
 // Ваш код для constexpr преобразования строк в enum::Genre и наоборот здесь
 
+constexpr auto genre_names = std::array<std::string_view, static_cast<size_t>(Genre::Unknown) + 1>{
+    "Fiction", "NonFiction", "SciFi", "Biography", "Mystery", "Unknown"};
+
+static_assert(genre_names.size() == static_cast<size_t>(Genre::Unknown) + 1, "Неверный размер массива genre_names");
+
 constexpr Genre GenreFromString(std::string_view s) {
-    static std::map<std::string_view, Genre> map = {{"Fiction", Genre::Fiction}, {"NonFiction", Genre::NonFiction},
-                                                    {"SciFi", Genre::SciFi},     {"Biography", Genre::Biography},
-                                                    {"Mystery", Genre::Mystery}, {"Unknown", Genre::Unknown}};
-    return map.contains(s) ? map.at(s) : Genre::Unknown;
+    for (size_t i = 0; i < genre_names.size(); ++i) {
+        if (genre_names[i] == s) {
+            return static_cast<Genre>(i);
+        }
+    }
+    return Genre::Unknown;
 }
 
 constexpr std::string_view StringFromGenre(Genre genre) {
-    static std::map<Genre, std::string_view> map = {{Genre::Fiction, "Fiction"}, {Genre::NonFiction, "NonFiction"},
-                                                    {Genre::SciFi, "SciFi"},     {Genre::Biography, "Biography"},
-                                                    {Genre::Mystery, "Mystery"}, {Genre::Unknown, "Unknown"}};
-    return map.contains(genre) ? map.at(genre) : "Unknown";
+    auto idx = static_cast<size_t>(genre);
+    if (idx < genre_names.size()) {
+        return genre_names[idx];
+    }
+    return "Unknown";
 }
 
 struct Book {

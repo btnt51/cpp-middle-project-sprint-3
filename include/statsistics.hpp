@@ -6,15 +6,14 @@
 #include <string_view>
 
 #include "book_database.hpp"
-#include "heterogeneous_lookup.hpp"
 
 #include <flat_map>
 
 namespace bookdb {
 using VectorOfRefToConstBooks = std::vector<std::reference_wrapper<const Book>>;
 
-template <BookContainerLike T, typename Comparator = TransparentTitleLess>
-auto buildAuthorHistogramFlat(const BookDatabase<T> &cont, Comparator comp = {}) {
+template <BookContainerLike T>
+auto buildAuthorHistogramFlat(const BookDatabase<T> &cont) {
     std::flat_map<std::string_view, size_t> histogram;
     std::for_each(cont.cbegin(), cont.cend(), [&](const auto &book) {
         auto author = book.author;
@@ -63,7 +62,7 @@ VectorOfRefToConstBooks getTopNBy(BookDatabase<T> &cont, std::size_t topN, Compa
 }
 
 template <BookContainerLike T>
-VectorOfRefToConstBooks sampleRandomBooks(BookDatabase<T> &cont, std::size_t amount) {
+VectorOfRefToConstBooks sampleRandomBooks(const BookDatabase<T> &cont, std::size_t amount) {
     VectorOfRefToConstBooks res;
     std::sample(cont.cbegin(), cont.cend(), std::back_inserter(res), amount, std::mt19937{std::random_device{}()});
     return res;
